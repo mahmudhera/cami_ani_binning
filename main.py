@@ -31,7 +31,7 @@ for contig_name, sequence, length in all_contigs[:10]:
 
     #print(len(contig_sketch.get_hashes()))
 
-    ani_values = []
+    containment_values = []
 
     for sig_name in all_signature_names[:10]:
         if not sig_name.endswith('sig'):
@@ -40,7 +40,7 @@ for contig_name, sequence, length in all_contigs[:10]:
         sig = signature.load_one_signature(signatures_filepath+'/'+sig_name)
         genome_sketch = sig.minhash
 
-        ani_values.append(contig_sketch.max_containment_ani(genome_sketch))
+        containment_values.append(max(contig_sketch.containment(genome_sketch), genome_sketch.containment(contig_sketch)) )
 
     print('Ani values:')
     print(ani_values)
