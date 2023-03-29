@@ -33,7 +33,7 @@ for contig_name, sequence, length in all_contigs[:10]:
 
     containment_values = []
 
-    for sig_name in all_signature_names[:10]:
+    for sig_name in all_signature_names:
         if not sig_name.endswith('sig'):
             continue
 
@@ -45,8 +45,8 @@ for contig_name, sequence, length in all_contigs[:10]:
 
         containment_values.append(max(v1, v2) )
 
-    print('Ani values:')
-    print(containment_values)
+    print('Largest ANI:')
+    print(max(containment_values))
     # for all available signatures:
         # load that signature
         # compute max containment ani
