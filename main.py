@@ -11,6 +11,10 @@ scaled = 100
 
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
+all_files = os.listdir(signatures_filepath)
+for f in all_files[:10]:
+	print(f)
+
 all_contigs = []
 
 with screed.open(filename) as seqfile:
