@@ -1,6 +1,6 @@
 import screed
 import os
-from sourmash import MinHash
+from sourmash import MinHash, signature
 
 sample_id = 0
 type = 'short'
@@ -10,10 +10,7 @@ k = 31
 scaled = 100
 
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
-
-all_files = os.listdir(signatures_filepath)
-for f in all_files[:10]:
-	print(f)
+all_signature_names = os.listdir(signatures_filepath)
 
 all_contigs = []
 
@@ -25,7 +22,7 @@ print( min( [length for _,_,length in all_contigs] ) )
 print( len(all_contigs) )
 
 for contig_name, sequence, length in all_contigs[:10]:
-    #print(contig_name)
+    print(contig_name)
     #print(sequence)
     #print(length)
 
@@ -34,6 +31,19 @@ for contig_name, sequence, length in all_contigs[:10]:
 
     #print(len(contig_sketch.get_hashes()))
 
+    ani_values = []
+
+    for sig_name in all_signature_names[:10]:
+        if not sig_name.endswith('sig'):
+            continue
+
+        sig = signature.load_one_signature(signatures_filepath+'/'+sig_name)
+        genome_sketch = sig.minhash
+
+        ani_values.append(contig_sketch.max_containment_ani(genome_sketch))
+
+    print('Ani values:')
+    print(ani_values)
     # for all available signatures:
         # load that signature
         # compute max containment ani
