@@ -2,6 +2,7 @@ import screed
 import os
 from sourmash import MinHash, signature
 import time
+from tqdm import tqdm
 
 sample_id = 0
 type = 'short'
@@ -15,7 +16,7 @@ signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 print('Loading all signatures:')
 all_signatures = []
 all_signature_names = os.listdir(signatures_filepath)
-for sig_name in all_signature_names:
+for sig_name in tqdm(all_signature_names):
     if not sig_name.endswith('sig'):
         continue
     sig = signature.load_one_signature(signatures_filepath+'/'+sig_name)
