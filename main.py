@@ -19,7 +19,7 @@ def preprocess():
         if not sig_name.endswith('sig'):
             continue
         sig = signature.load_one_signature(signatures_filepath+'/'+sig_name)
-        all_signatures.append(sig.minhash)
+        all_signatures.append(sig)
     print('All signatures loaded.')
 
     print('Loading all contigs:')
@@ -35,11 +35,13 @@ def process_one_contig(all_signatures, contig_sequence):
     contig_sketch = MinHash(n=0, ksize=k, scaled=scaled)
     contig_sketch.add_sequence(contig_sequence)
 
-    containment_values = []
-    for genome_sketch in all_signatures:
+    max_containment = 0.0
+    for sig in all_signatures:
+        genome_sketch = sig.minhash
         v1 = contig_sketch.contained_by(genome_sketch)
         v2 = genome_sketch.contained_by(contig_sketch)
-        containment_values.append(max(v1, v2) )
+        if max(v1, v2) > max_containment:
+            max_containment = max(v1, v2)
     return max(containment_values)
 
 def process_all_contigs(all_signatures, all_contigs):
