@@ -82,5 +82,5 @@ def process_all_contigs(all_signatures, all_contigs):
     print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
 
 if __name__ == '__main__':
-all_signatures, all_contigs = preprocess()
-process_all_contigs(all_signatures, all_contigs)
+    all_signatures, all_contigs = preprocess()
+    process_all_contigs(all_signatures, all_contigs)
