@@ -4,6 +4,7 @@ from sourmash import MinHash, signature
 import time
 from tqdm import tqdm
 import multiprocessing
+import math
 
 sample_id = 0
 type = 'short'
@@ -50,7 +51,7 @@ def process_one_contig(all_signatures, contig_sequence, manager):
     return_list = manager.list( [-1]*num_threads )
     process_list = []
     num_signatures = len(all_signatures)
-    per_thread = int(num_signatures/num_threads)+1
+    per_thread = math.ceil(num_signatures/num_threads)
     for process_id in range(num_threads):
         my_start = process_id*per_thread
         my_end = min((process_id+1)*per_thread, num_signatures)
@@ -66,6 +67,7 @@ def process_one_contig(all_signatures, contig_sequence, manager):
         if containment > max_containment:
             max_containment = containment
             assigned_bin = bin
+    return_list = None
     return max_containment, assigned_bin
 
 def process_all_contigs(all_signatures, all_contigs):
