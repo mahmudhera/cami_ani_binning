@@ -15,7 +15,7 @@ def preprocess():
     print('Loading all signatures:')
     all_signatures = []
     all_signature_names = os.listdir(signatures_filepath)
-    for sig_name in tqdm(all_signature_names):
+    for sig_name in tqdm(all_signature_names[:100]):
         if not sig_name.endswith('sig'):
             continue
         sig = signature.load_one_signature(signatures_filepath+'/'+sig_name)
