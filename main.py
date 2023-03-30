@@ -18,7 +18,7 @@ def preprocess(manager):
     print('Loading all signatures:')
     all_signatures = manager.list()
     all_signature_names = os.listdir(signatures_filepath)
-    for sig_name in tqdm(all_signature_names):
+    for sig_name in tqdm(all_signature_names[:10000]):
         if not sig_name.endswith('sig'):
             continue
         sig = signature.load_one_signature(signatures_filepath+'/'+sig_name)
@@ -35,7 +35,7 @@ def preprocess(manager):
 def process_one_contig_threaded(all_signatures, contig_sequence, return_list, process_id):
     num_signatures = len(all_signatures)
     per_thread = int(num_signatures/num_threads)+1
-    my_start = min(process_id*per_thread)
+    my_start = process_id*per_thread
     my_end = min((process_id+1)*per_thread, num_signatures)
     contig_sketch = MinHash(n=0, ksize=k, scaled=scaled)
     contig_sketch.add_sequence(contig_sequence)
@@ -71,7 +71,6 @@ def process_one_contig(all_signatures, contig_sequence, manager):
 def process_all_contigs(all_signatures, all_contigs, manager):
     print('Starting to process all contigs.')
     start_time = time.time()
-    all_signatures = manager.list(all_signatures)
     for contig_name, sequence, length in all_contigs[:10]:
         print(f'Processing contig: {contig_name}')
         max_containment, assigned_bin = process_one_contig(all_signatures, sequence, manager)
