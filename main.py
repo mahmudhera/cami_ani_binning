@@ -14,9 +14,9 @@ signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
 num_threads = 128
 
-def preprocess(manager):
+def preprocess():
     print('Loading all signatures:')
-    all_signatures = manager.list()
+    all_signatures = []
     all_signature_names = os.listdir(signatures_filepath)
     for sig_name in tqdm(all_signature_names[:10000]):
         if not sig_name.endswith('sig'):
@@ -33,10 +33,7 @@ def preprocess(manager):
     return all_signatures, all_contigs
 
 def process_one_contig_threaded(all_signatures, contig_sequence, return_list, process_id):
-    num_signatures = len(all_signatures)
-    per_thread = int(num_signatures/num_threads)+1
-    my_start = process_id*per_thread
-    my_end = min((process_id+1)*per_thread, num_signatures)
+
     contig_sketch = MinHash(n=0, ksize=k, scaled=scaled)
     contig_sketch.add_sequence(contig_sequence)
     max_containment = 0.0
@@ -53,8 +50,12 @@ def process_one_contig_threaded(all_signatures, contig_sequence, return_list, pr
 def process_one_contig(all_signatures, contig_sequence, manager):
     return_list = manager.list( [-1]*num_threads )
     process_list = []
+    num_signatures = len(all_signatures)
+    per_thread = int(num_signatures/num_threads)+1
     for process_id in range(num_threads):
-        process = multiprocessing.Process(target=process_one_contig_threaded, args=[all_signatures, contig_sequence, return_list, process_id])
+        my_start = process_id*per_thread
+        my_end = min((process_id+1)*per_thread, num_signatures)
+        process = multiprocessing.Process(target=process_one_contig_threaded, args=[all_signatures[my_start:my_end], contig_sequence, return_list, process_id])
         process_list.append(process)
     for process in process_list:
         process.start()
@@ -68,7 +69,8 @@ def process_one_contig(all_signatures, contig_sequence, manager):
             assigned_bin = bin
     return max_containment, assigned_bin
 
-def process_all_contigs(all_signatures, all_contigs, manager):
+def process_all_contigs(all_signatures, all_contigs):
+    manager = multiprocessing.Manager()
     print('Starting to process all contigs.')
     start_time = time.time()
     for contig_name, sequence, length in all_contigs[:10]:
@@ -80,6 +82,5 @@ def process_all_contigs(all_signatures, all_contigs, manager):
     print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
 
 if __name__ == '__main__':
-    manager = multiprocessing.Manager()
-    all_signatures, all_contigs = preprocess(manager)
-    process_all_contigs(all_signatures, all_contigs, manager)
+all_signatures, all_contigs = preprocess()
+process_all_contigs(all_signatures, all_contigs)
