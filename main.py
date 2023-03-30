@@ -33,12 +33,11 @@ def preprocess():
     return all_signatures, all_contigs
 
 def process_one_contig_threaded(all_signatures, contig_sequence, return_list, process_id):
-
     contig_sketch = MinHash(n=0, ksize=k, scaled=scaled)
     contig_sketch.add_sequence(contig_sequence)
     max_containment = 0.0
     assigned_bin = None
-    for sig in all_signatures[my_start:my_end]:
+    for sig in all_signatures:
         genome_sketch = sig.minhash
         v1 = contig_sketch.contained_by(genome_sketch)
         v2 = genome_sketch.contained_by(contig_sketch)
