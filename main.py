@@ -13,7 +13,7 @@ k = 31
 scaled = 100
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
-num_threads = 128
+num_threads = 64
 
 def preprocess():
     print('Loading all signatures:')
@@ -47,8 +47,9 @@ def process_one_contig_threaded(all_signatures, contig_sequence, return_list, pr
             assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
     return_list[process_id] = (max_containment, assigned_bin)
 
-def process_one_contig(all_signatures, contig_sequence, manager):
-    return_list = manager.list( [-1]*num_threads )
+def process_one_contig(all_signatures, contig_sequence, return_list):
+    for i in range(len(return_list)):
+        return_list[i] = -1
     process_list = []
     num_signatures = len(all_signatures)
     per_thread = math.ceil(num_signatures/num_threads)
@@ -92,11 +93,12 @@ def process_all_contigs_no_thread(all_signatures, all_contigs):
 
 def process_all_contigs(all_signatures, all_contigs):
     manager = multiprocessing.Manager()
+    return_list = manager.list( [-1]*num_threads )
     print('Starting to process all contigs.')
     start_time = time.time()
     for contig_name, sequence, length in all_contigs[:10]:
         print(f'Processing contig: {contig_name}')
-        max_containment, assigned_bin = process_one_contig(all_signatures, sequence, manager)
+        max_containment, assigned_bin = process_one_contig(all_signatures, sequence, return_list)
         print(f'Largest containment: {max_containment}, assigned to: {assigned_bin}')
     end_time = time.time()
     print(f'Elapsed time: {end_time-start_time}')
