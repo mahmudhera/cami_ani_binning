@@ -70,6 +70,26 @@ def process_one_contig(all_signatures, contig_sequence, manager):
     return_list = None
     return max_containment, assigned_bin
 
+def process_all_contigs_no_thread(all_signatures, all_contigs):
+    print('Starting to process all contigs.')
+    start_time = time.time()
+    for contig_name, sequence, length in all_contigs[:10]:
+        print(f'Processing contig: {contig_name}')
+        contig_sketch = MinHash(n=0, ksize=k, scaled=scaled)
+        contig_sketch.add_sequence(sequence)
+        max_containment, assigned_bin = 0.0, None
+        for sig in all_signatures:
+            genome_sketch = sig.minhash
+            v1 = contig_sketch.contained_by(genome_sketch)
+            v2 = genome_sketch.contained_by(contig_sketch)
+            if max(v1, v2) > max_containment:
+                max_containment = max(v1, v2)
+                assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
+        print(f'Largest containment: {max_containment}, assigned to: {assigned_bin}')
+    end_time = time.time()
+    print(f'Elapsed time: {end_time-start_time}')
+    print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
+
 def process_all_contigs(all_signatures, all_contigs):
     manager = multiprocessing.Manager()
     print('Starting to process all contigs.')
@@ -85,3 +105,4 @@ def process_all_contigs(all_signatures, all_contigs):
 if __name__ == '__main__':
     all_signatures, all_contigs = preprocess()
     process_all_contigs(all_signatures, all_contigs)
+    process_all_contigs_no_thread(all_signatures, all_contigs)
