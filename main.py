@@ -6,7 +6,8 @@ from tqdm import tqdm
 import multiprocessing
 import math
 
-# with 8 threads: ??
+# with 4 tghreads: ??
+# with 8 threads: 5.5
 # with 16 threads: 5.7 sec per contig
 # with 32 threads: 11.4 sec per contig
 # with 64 threads: 15 sec per contig
@@ -19,7 +20,7 @@ k = 31
 scaled = 100
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
-num_threads = 8
+num_threads = 4
 
 def preprocess():
     print('Loading all signatures:')
