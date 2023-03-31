@@ -13,7 +13,7 @@ k = 31
 scaled = 100
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
-num_threads = 120
+num_threads = 32
 
 def preprocess():
     print('Loading all signatures:')
