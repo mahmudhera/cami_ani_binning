@@ -6,6 +6,11 @@ from tqdm import tqdm
 import multiprocessing
 import math
 
+# with 16 threads: ??
+# with 32 threads: 11.4 sec per contig
+# with 64 threads: 15 sec per contig
+# with 128 threads: 30 sec per contig
+
 sample_id = 0
 type = 'short'
 filename = f'/data/mbr5797/cami/refseq/cami2_marine/simulation_{type}_read/2018.08.15_09.49.32_sample_{sample_id}/contigs/anonymous_gsa.fasta'
@@ -13,7 +18,7 @@ k = 31
 scaled = 100
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
-num_threads = 32
+num_threads = 16
 
 def preprocess():
     print('Loading all signatures:')
