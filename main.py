@@ -13,7 +13,7 @@ k = 31
 scaled = 100
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
-num_threads = 64
+num_threads = 120
 
 def preprocess():
     print('Loading all signatures:')
@@ -47,29 +47,46 @@ def process_one_contig_threaded(all_signatures, contig_sequence, return_list, pr
             assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
     return_list[process_id] = (max_containment, assigned_bin)
 
-def process_one_contig(all_signatures, contig_sequence, return_list):
-    for i in range(len(return_list)):
-        return_list[i] = -1
-    process_list = []
-    num_signatures = len(all_signatures)
-    per_thread = math.ceil(num_signatures/num_threads)
-    for process_id in range(num_threads):
-        my_start = process_id*per_thread
-        my_end = min((process_id+1)*per_thread, num_signatures)
-        process = multiprocessing.Process(target=process_one_contig_threaded, args=[all_signatures[my_start:my_end], contig_sequence, return_list, process_id])
-        process_list.append(process)
-    for process in process_list:
-        process.start()
-    for process in process_list:
-        process.join()
-    max_containment = 0.0
-    assigned_bin = None
-    for (containment, bin) in return_list:
-        if containment > max_containment:
-            max_containment = containment
-            assigned_bin = bin
-    return_list = None
-    return max_containment, assigned_bin
+def process_all_contigs(all_signatures, all_contigs):
+    manager = multiprocessing.Manager()
+    return_list = manager.list( [-1]*num_threads )
+
+    print('Starting to process all contigs.')
+    start_time = time.time()
+    for contig_name, sequence, length in all_contigs[:10]:
+        print(f'Processing contig: {contig_name}')
+
+        process_list = []
+        num_signatures = len(all_signatures)
+        per_thread = math.ceil(num_signatures/num_threads)
+
+        for process_id in range(num_threads):
+            my_start = process_id*per_thread
+            my_end = min((process_id+1)*per_thread, num_signatures)
+            process = multiprocessing.Process(target=process_one_contig_threaded, args=[all_signatures[my_start:my_end], sequence, return_list, process_id])
+            process_list.append(process)
+
+        for i in range(len(return_list)):
+            return_list[i] = -1
+
+        for process in process_list:
+            process.start()
+
+        for process in process_list:
+            process.join()
+
+        max_containment = 0.0
+        assigned_bin = None
+
+        for (containment, bin) in return_list:
+            if containment > max_containment:
+                max_containment = containment
+                assigned_bin = bin
+        print(f'Largest containment: {max_containment}, assigned to: {assigned_bin}')
+
+    end_time = time.time()
+    print(f'Elapsed time: {end_time-start_time}')
+    print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
 
 def process_all_contigs_no_thread(all_signatures, all_contigs):
     print('Starting to process all contigs.')
@@ -86,19 +103,6 @@ def process_all_contigs_no_thread(all_signatures, all_contigs):
             if max(v1, v2) > max_containment:
                 max_containment = max(v1, v2)
                 assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
-        print(f'Largest containment: {max_containment}, assigned to: {assigned_bin}')
-    end_time = time.time()
-    print(f'Elapsed time: {end_time-start_time}')
-    print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
-
-def process_all_contigs(all_signatures, all_contigs):
-    manager = multiprocessing.Manager()
-    return_list = manager.list( [-1]*num_threads )
-    print('Starting to process all contigs.')
-    start_time = time.time()
-    for contig_name, sequence, length in all_contigs[:10]:
-        print(f'Processing contig: {contig_name}')
-        max_containment, assigned_bin = process_one_contig(all_signatures, sequence, return_list)
         print(f'Largest containment: {max_containment}, assigned to: {assigned_bin}')
     end_time = time.time()
     print(f'Elapsed time: {end_time-start_time}')
