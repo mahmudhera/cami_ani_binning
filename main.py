@@ -21,7 +21,7 @@ k = 31
 scaled = 100
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
-num_threads = 4
+num_threads = 8
 
 def preprocess():
     print('Loading all signatures:')
@@ -98,7 +98,7 @@ def process_all_contigs(all_signatures, all_contigs):
 
 def filter_based_on_containment(sample_filename, all_signatures):
     sample_signature_filename = sample_filename + '.sig'
-    sample_signature = signature.load_one_signature(signatures_filepath+'/'+sig_name)
+    sample_signature = signature.load_one_signature(sample_signature_filename)
     filtered_genome_signatures = []
     for genome_signature in all_signatures:
         if genome_signature.minhash.contained_by(sample_signature.minhash) > 0.05:
