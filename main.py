@@ -5,8 +5,9 @@ import time
 from tqdm import tqdm
 import multiprocessing
 import math
+import argparse
 
-# with 4 tghreads: ??
+# with 4 tghreads: 8 secs
 # with 8 threads: 5.5
 # with 16 threads: 5.7 sec per contig
 # with 32 threads: 11.4 sec per contig
@@ -115,7 +116,23 @@ def process_all_contigs_no_thread(all_signatures, all_contigs):
     print(f'Elapsed time: {end_time-start_time}')
     print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
 
+def parse_args():
+    # Define argument parser
+    parser = argparse.ArgumentParser(description="This script will assign sample contigs to genome bins.")
+    # Add arguments to the parser
+    parser.add_argument("sample_id", type=int, help="The sample ID as an integer (0-9).")
+    parser.add_argument("sample_type", type=str, help="The sample type as a string (long or short).")
+    parser.add_argument("k", type=int, help="The k value as an integer.")
+    parser.add_argument("scaled", type=int, help="The scaled value as an integer.")
+    parser.add_argument("signatures_directory", type=str, help="The signatures directory as a string.")
+    parser.add_argument("num_threads", type=int, help="The number of threads as an integer.")
+    # Parse the arguments
+    args = parser.parse_args()
+
+    return args.sample_id, args.sample_type, args.k, args.scaled, args.signatures_directory, args.num_threads
+
 if __name__ == '__main__':
+    sample_id, type, k, scaled, signatures_filepath, num_threads = parse_args()
     all_signatures, all_contigs = preprocess()
     process_all_contigs(all_signatures, all_contigs)
     process_all_contigs_no_thread(all_signatures, all_contigs)
