@@ -96,6 +96,15 @@ def process_all_contigs(all_signatures, all_contigs):
     print(f'Elapsed time: {end_time-start_time}')
     print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
 
+def filter_based_on_containment(sample_filename, all_signatures):
+    sample_signature_filename = sample_filename + '.sig'
+    sample_signature = signature.load_one_signature(signatures_filepath+'/'+sig_name)
+    filtered_genome_signatures = []
+    for genome_signature in all_signatures:
+        if genome_signature.minhash.contained_by(sample_signature.minhash) > 0.05:
+            filtered_genome_signatures.append(genome_signature)
+    return filtered_genome_signatures
+
 def process_all_contigs_no_thread(all_signatures, all_contigs):
     print('Starting to process all contigs.')
     start_time = time.time()
@@ -133,6 +142,13 @@ def parse_args():
 
 if __name__ == '__main__':
     sample_id, type, k, scaled, signatures_filepath, num_threads = parse_args()
+    filename = f'/data/mbr5797/cami/refseq/cami2_marine/simulation_{type}_read/2018.08.15_09.49.32_sample_{sample_id}/contigs/anonymous_gsa.fasta'
+
     all_signatures, all_contigs = preprocess()
-    process_all_contigs(all_signatures, all_contigs)
-    process_all_contigs_no_thread(all_signatures, all_contigs)
+
+    print(f'Num of genomes before filtering: {len(all_signatures)}')
+    filtered_genome_signatures = filter_based_on_containment(filename, all_signatures)
+    print(f'Num of genomes after filtering: {len(filtered_genome_signatures)}')
+
+    process_all_contigs(filtered_genome_signatures, all_contigs)
+    process_all_contigs_no_thread(filtered_genome_signatures, all_contigs)
