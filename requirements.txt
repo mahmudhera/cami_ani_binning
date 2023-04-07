@@ -1,2 +1,5 @@
 screed
 sourmash
+pandas
+tqdm
+pandas

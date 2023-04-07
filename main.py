@@ -141,7 +141,7 @@ def parse_args():
     # Parse the arguments
     args = parser.parse_args()
 
-    return args.sample_id, args.sample_type, args.k, args.scaled, args.signatures_directory, args.num_threads
+    return args.sample_id, args.sample_type, args.k, args.scaled, args.signatures_directory, args.num_threads, args.containment_threshold, args.output_file
 
 if __name__ == '__main__':
     sample_id, type, k, scaled, signatures_filepath, num_threads, containment_threshold = parse_args()
