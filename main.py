@@ -101,7 +101,7 @@ def filter_based_on_containment(sample_filename, all_signatures, k, scaled, cont
     sample_signature_filename = sample_filename + f'_k_{k}_scaled_{scaled}.sig'
     sample_signature = signature.load_one_signature(sample_signature_filename)
     filtered_genome_signatures = []
-    for genome_signature in all_signatures:
+    for genome_signature in tqdm(all_signatures):
         if genome_signature.minhash.contained_by(sample_signature.minhash) > containment_threshold:
             filtered_genome_signatures.append(genome_signature)
     return filtered_genome_signatures
