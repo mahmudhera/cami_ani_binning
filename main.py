@@ -114,7 +114,7 @@ def process_all_contigs_no_thread(all_signatures, all_contigs, num_runs_to_test=
         try:
             contig_sketch.add_sequence(sequence)
         except:
-            bins.append(None)
+            assigned_bins.append(None)
             continue
         max_containment, assigned_bin = 0.0, None
         for sig in all_signatures:
