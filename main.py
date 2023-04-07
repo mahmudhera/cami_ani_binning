@@ -22,6 +22,7 @@ scaled = 100
 signatures_filepath = f'/data/mbr5797/cami/refseq/sketches_k_{k}_sc_{scaled}'
 
 num_threads = 8
+num_genomes = 10000
 
 def preprocess():
     print('Loading all signatures:')
@@ -96,8 +97,8 @@ def process_all_contigs(all_signatures, all_contigs):
     print(f'Elapsed time: {end_time-start_time}')
     print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
 
-def filter_based_on_containment(sample_filename, all_signatures):
-    sample_signature_filename = sample_filename + '.sig'
+def filter_based_on_containment(sample_filename, all_signatures, k, scaled):
+    sample_signature_filename = sample_filename + f'_k_{k}_scaled_{scaled}.sig'
     sample_signature = signature.load_one_signature(sample_signature_filename)
     filtered_genome_signatures = []
     for genome_signature in all_signatures:
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     all_signatures, all_contigs = preprocess()
 
     print(f'Num of genomes before filtering: {len(all_signatures)}')
-    filtered_genome_signatures = filter_based_on_containment(filename, all_signatures)
+    filtered_genome_signatures = filter_based_on_containment(filename, all_signatures, k, scaled)
     print(f'Num of genomes after filtering: {len(filtered_genome_signatures)}')
 
     process_all_contigs(filtered_genome_signatures, all_contigs)
