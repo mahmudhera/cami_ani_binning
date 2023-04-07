@@ -144,7 +144,7 @@ def parse_args():
     return args.sample_id, args.sample_type, args.k, args.scaled, args.signatures_directory, args.num_threads, args.containment_threshold, args.output_file
 
 if __name__ == '__main__':
-    sample_id, type, k, scaled, signatures_filepath, num_threads, containment_threshold = parse_args()
+    sample_id, type, k, scaled, signatures_filepath, num_threads, containment_threshold, output_file = parse_args()
     filename = f'/data/mbr5797/cami/refseq/cami2_marine/simulation_{type}_read/2018.08.15_09.49.32_sample_{sample_id}/contigs/anonymous_gsa.fasta'
 
     # load all signatures of all genomes
