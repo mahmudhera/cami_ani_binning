@@ -6,6 +6,7 @@ from tqdm import tqdm
 import multiprocessing
 import math
 import argparse
+import pandas as pd
 
 # with 4 tghreads: 8 secs
 # with 8 threads: 5.5
@@ -56,15 +57,13 @@ def process_one_contig_threaded(all_signatures, contig_sequence, return_list, pr
             assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
     return_list[process_id] = (max_containment, assigned_bin)
 
-def process_all_contigs(all_signatures, all_contigs):
+def process_all_contigs(all_signatures, all_contigs, num_runs_to_test):
     manager = multiprocessing.Manager()
     return_list = manager.list( [-1]*num_threads )
 
-    print('Starting to process all contigs.')
     start_time = time.time()
-    for contig_name, sequence, length in all_contigs[:10]:
-        print(f'Processing contig: {contig_name}')
-
+    assigned_bins = []
+    for contig_name, sequence, length in tqdm(all_contigs[:num_runs_to_test]):
         process_list = []
         num_signatures = len(all_signatures)
         per_thread = math.ceil(num_signatures/num_threads)
@@ -91,26 +90,26 @@ def process_all_contigs(all_signatures, all_contigs):
             if containment > max_containment:
                 max_containment = containment
                 assigned_bin = bin
-        print(f'Largest containment: {max_containment}, assigned to: {assigned_bin}')
+        assigned_bins.append(assigned_bin)
 
     end_time = time.time()
     print(f'Elapsed time: {end_time-start_time}')
     print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
+    return end_time-start_time, assigned_bins
 
-def filter_based_on_containment(sample_filename, all_signatures, k, scaled):
+def filter_based_on_containment(sample_filename, all_signatures, k, scaled, containment_threshold):
     sample_signature_filename = sample_filename + f'_k_{k}_scaled_{scaled}.sig'
     sample_signature = signature.load_one_signature(sample_signature_filename)
     filtered_genome_signatures = []
     for genome_signature in all_signatures:
-        if genome_signature.minhash.contained_by(sample_signature.minhash) > 0.05:
+        if genome_signature.minhash.contained_by(sample_signature.minhash) > containment_threshold:
             filtered_genome_signatures.append(genome_signature)
     return filtered_genome_signatures
 
-def process_all_contigs_no_thread(all_signatures, all_contigs):
-    print('Starting to process all contigs.')
+def process_all_contigs_no_thread(all_signatures, all_contigs, num_runs_to_test=10):
     start_time = time.time()
-    for contig_name, sequence, length in all_contigs[:10]:
-        print(f'Processing contig: {contig_name}')
+    assigned_bins = []
+    for contig_name, sequence, length in tqdm(all_contigs[:num_runs_to_test]):
         contig_sketch = MinHash(n=0, ksize=k, scaled=scaled)
         contig_sketch.add_sequence(sequence)
         max_containment, assigned_bin = 0.0, None
@@ -121,10 +120,11 @@ def process_all_contigs_no_thread(all_signatures, all_contigs):
             if max(v1, v2) > max_containment:
                 max_containment = max(v1, v2)
                 assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
-        print(f'Largest containment: {max_containment}, assigned to: {assigned_bin}')
+        assigned_bins.append(assigned_bin)
     end_time = time.time()
     print(f'Elapsed time: {end_time-start_time}')
     print(f'Elapsed time per iteration: {(end_time-start_time)/10.0}')
+    return end_time-start_time, assigned_bins
 
 def parse_args():
     # Define argument parser
@@ -136,20 +136,46 @@ def parse_args():
     parser.add_argument("scaled", type=int, help="The scaled value as an integer.")
     parser.add_argument("signatures_directory", type=str, help="The signatures directory as a string.")
     parser.add_argument("num_threads", type=int, help="The number of threads as an integer.")
+    parser.add_argument("containment_threshold", type=float, help="The containment threshold as a float.", default=0.001)
+    parser.add_argument("output_file", type=str, help="The filename, where contig to bin assignment will be written.")
     # Parse the arguments
     args = parser.parse_args()
 
     return args.sample_id, args.sample_type, args.k, args.scaled, args.signatures_directory, args.num_threads
 
 if __name__ == '__main__':
-    sample_id, type, k, scaled, signatures_filepath, num_threads = parse_args()
+    sample_id, type, k, scaled, signatures_filepath, num_threads, containment_threshold = parse_args()
     filename = f'/data/mbr5797/cami/refseq/cami2_marine/simulation_{type}_read/2018.08.15_09.49.32_sample_{sample_id}/contigs/anonymous_gsa.fasta'
 
+    # load all signatures of all genomes
     all_signatures, all_contigs = preprocess()
 
+    # filter based on containment threshold
     print(f'Num of genomes before filtering: {len(all_signatures)}')
-    filtered_genome_signatures = filter_based_on_containment(filename, all_signatures, k, scaled)
+    filtered_genome_signatures = filter_based_on_containment(filename, all_signatures, k, scaled, containment_threshold)
     print(f'Num of genomes after filtering: {len(filtered_genome_signatures)}')
 
-    process_all_contigs(filtered_genome_signatures, all_contigs)
-    process_all_contigs_no_thread(filtered_genome_signatures, all_contigs)
+    # test which code takes less time
+    num_runs_to_test = 10
+    t1, bins_1 = process_all_contigs(filtered_genome_signatures, all_contigs, num_runs_to_test)
+    t2, bins_2 = process_all_contigs_no_thread(filtered_genome_signatures, all_contigs, num_runs_to_test)
+
+    num_contigs = len(all_contigs)
+    if t1 < t2:
+        print('Using threaded version.')
+        t, bins = process_all_contigs(filtered_genome_signatures, all_contigs, num_contigs)
+    else:
+        print('Using non-threaded version.')
+        t, bins = process_all_contigs_no_thread(filtered_genome_signatures, all_contigs, num_contigs)
+
+    print('First ten bins:')
+    print(bins[:10])
+    print('-----------------')
+
+    print('Last ten bins:')
+    print(bins[-10:])
+    print('-----------------')
+
+    data = {'Contig': all_contigs, 'Bin': bins}
+    df = pd.DataFrame(data)
+    df.to_csv(output_file)
