@@ -111,7 +111,11 @@ def process_all_contigs_no_thread(all_signatures, all_contigs, num_runs_to_test=
     assigned_bins = []
     for contig_name, sequence, length in tqdm(all_contigs[:num_runs_to_test]):
         contig_sketch = MinHash(n=0, ksize=k, scaled=scaled)
-        contig_sketch.add_sequence(sequence)
+        try:
+            contig_sketch.add_sequence(sequence)
+        except:
+            bins.append(None)
+            continue
         max_containment, assigned_bin = 0.0, None
         for sig in all_signatures:
             genome_sketch = sig.minhash
