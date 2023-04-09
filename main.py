@@ -57,6 +57,7 @@ def process_one_contig_threaded(all_signatures, contig_sequence, return_list, pr
             try:
                 assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
             except:
+                print(sig)
                 print(sig.name())
                 exit(-1)
     return_list[process_id] = (max_containment, assigned_bin)
