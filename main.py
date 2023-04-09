@@ -57,9 +57,7 @@ def process_one_contig_threaded(all_signatures, contig_sequence, return_list, pr
             try:
                 assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
             except:
-                print(sig)
-                print(sig.name())
-                exit(-1)
+                assigned_bin = sig.split('/')[-1].split('_genomic.fna.gz')[0]
     return_list[process_id] = (max_containment, assigned_bin)
 
 def process_all_contigs(all_signatures, all_contigs, num_runs_to_test):
@@ -128,7 +126,10 @@ def process_all_contigs_no_thread(all_signatures, all_contigs, num_runs_to_test=
             v2 = genome_sketch.contained_by(contig_sketch)
             if max(v1, v2) > max_containment:
                 max_containment = max(v1, v2)
-                assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
+                try:
+                    assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
+                except:
+                    assigned_bin = sig.split('/')[-1].split('_genomic.fna.gz')[0]
         assigned_bins.append(assigned_bin)
     end_time = time.time()
     print(f'Elapsed time: {end_time-start_time}')
