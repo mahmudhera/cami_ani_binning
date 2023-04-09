@@ -54,7 +54,11 @@ def process_one_contig_threaded(all_signatures, contig_sequence, return_list, pr
         v2 = genome_sketch.contained_by(contig_sketch)
         if max(v1, v2) > max_containment:
             max_containment = max(v1, v2)
-            assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
+            try:
+                assigned_bin = sig.name().split('/')[-1].split('_genomic.fna.gz')[0]
+            except:
+                print(sig.name())
+                exit(-1)
     return_list[process_id] = (max_containment, assigned_bin)
 
 def process_all_contigs(all_signatures, all_contigs, num_runs_to_test):
